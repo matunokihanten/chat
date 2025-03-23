@@ -97,7 +97,7 @@ onSnapshot(messagesRef, (snapshot) => {
   ※ 注意：このコードはクライアント側に API キーを含めるため、実際の運用時はサーバー側で処理するなどセキュリティ対策を講じてください。
 */
 async function getAIResponse(userMessage) {
-  const API_KEY = "AIzaSyAk_I5nBbccP5CO6aUoKXu19urq_7B9jm0";  // ※ OpenAI の API キーを設定してください
+  const API_KEY = "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";  // ※ OpenAI の API キーを設定してください
   try {
     const response = await fetch("https://api.openai.com/v1/completions", {
       method: "POST",
