@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>リアルタイムチャット</title>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+      color: #000;
+      margin: 0;
+      padding: 0;
+    }
+    #chatContainer {
+      width: 90%;
+      height: 60vh;
+      border: 1px solid #ccc;
+      margin: 10px auto;
+      padding: 10px;
+      overflow-y: scroll;
+      background-color: #f9f9f9;
+    }
+    .chatMessage {
+      padding: 5px;
+      margin-bottom: 5px;
+      border-bottom: 1px solid #ccc;
+    }
+    /* ダークモード用スタイル */
+    body.dark-mode {
+      background-color: #333;
+      color: #eee;
+    }
+    body.dark-mode #chatContainer {
+      background-color: #555;
+      color: #eee;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>リアルタイムチャット</h1>
+  </header>
+
+  <div id="chatContainer"></div>
+  <input type="text" id="nameInput" placeholder="名前 (空の場合は『名無し』)">
+  <input type="text" id="textInput" placeholder="メッセージを入力">
+  <button id="sendButton">送信</button>
+  <button id="clearButton">クリア</button>
+  <button id="darkModeButton">ダークモード</button>
+
+  <script>
+    // Firebase設定
+    const firebaseConfig = {
+      apiKey: "AIzaSyCluZ07gfC31CH5njxq_inel53KOvV6jG8",
+      authDomain: "chat-c59bf.firebaseapp.com",
+      databaseURL: "https://chat-c59bf-default-rtdb.firebaseio.com",
+      projectId: "chat-c59bf",
+      storageBucket: "chat-c59bf.appspot.com",
+      messagingSenderId: "383217078378",
+      appId: "1:383217078378:web:3b90e80e25f7351d6bba13"
+    };
+
+    // Firebase初期化
+    firebase.initializeApp(firebaseConfig);
+
+    const db = firebase.database();
+    const chatRef = db.ref("chat");
+
+    // DOMエレメントの取得
+    const chatContainer = document.getElementById("chatContainer");
+    const textInput = document.getElementById("textInput");
+    const nameInput = document.getElementById("nameInput");
+    const sendButton = document.getElementById("sendButton");
+    const clearButton = document.getElementById("clearButton");
+    const darkModeButton = document.getElementById("darkModeButton");
+
+    // メッセージ送信機能
+    sendButton.addEventListener("click", function() {
+      sendMessage();
+    });
+
+    textInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+
+    function sendMessage() {
+      const name = nameInput.value.trim() || "名無し"; // 空の場合は「名無し」
+      const message = textInput.value.trim();
+      const timestamp = new Date().toLocaleString();
+
+      if (message === "") {
+        alert("メッセージを入力してください");
+        return;
+      }
+
+      // Firebaseにデータを送信
+      chatRef.push({
+        name: name,
+        message: message,
+        time: timestamp
+      });
+
+      // 入力欄をクリア
+      textInput.value = "";
+    }
+
+    // チャットクリア機能
+    clearButton.addEventListener("click", function() {
+      if (confirm("チャットをクリアしますか？")) {
+        chatRef.remove()
+          .then(function() {
+            console.log("チャットがクリアされました");
+          })
+          .catch(function(error) {
+            console.error("チャットのクリアに失敗しました: ", error);
+          });
+      }
+    });
+
+    // ダークモード切替機能
+    darkModeButton.addEventListener("click", function() {
+      document.body.classList.toggle("dark-mode");
+    });
+
+    // メッセージのリアルタイム受信
+    chatRef.on("child_added", function(snapshot) {
+      const data = snapshot.val();
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("chatMessage");
+      messageDiv.textContent = `${data.time} | ${data.name}: ${data.message}`;
+      chatContainer.appendChild(messageDiv);
+
+      // 自動スクロール
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    });
+
+    // チャット内容が更新されたときに実行される関数
+    chatRef.on("child_removed", function(snapshot) {
+      // 削除されたメッセージに対応する処理 (例: 画面からメッセージを削除)
+      chatContainer.innerHTML = ''; // 簡単のため、毎回チャット内容を再描画
+    });
+  </script>
+</body>
+</html>
