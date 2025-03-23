@@ -8,13 +8,8 @@ import {
   deleteDoc, 
   getDocs 
 } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
-import { 
-  getStorage, 
-  ref, 
-  uploadBytes 
-} from "https://www.gstatic.com/firebasejs/11.5.0/firebase-storage.js";
 
-// Firebase設定（自身のプロジェクトに置き換えてください）
+// Firebase設定（自身のプロジェクト情報に置き換えてください）
 const firebaseConfig = {
   apiKey: "AIzaSyAk_I5nBbccP5CO6aUoKXu19urq_7B9jm0",
   authDomain: "my-chat-room-75025.firebaseapp.com",
@@ -28,49 +23,40 @@ const firebaseConfig = {
 // Firebase初期化
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 // Firestoreコレクション
 const messagesRef = collection(db, "messages");
-const roomsRef = collection(db, "rooms");
 
-// チャットルームの作成
-const createRoom = async (roomName) => {
-  if (roomName.trim()) {
-    await addDoc(roomsRef, { name: roomName, timestamp: Date.now() });
-    const roomSelect = document.getElementById("roomSelect");
-    const newOption = document.createElement("option");
-    newOption.value = roomName;
-    newOption.textContent = roomName;
-    roomSelect.appendChild(newOption);
-    alert(`ルーム「${roomName}」が作成されました！`);
-  }
-};
+// 現在のチャットルーム名（デフォルト: "チャットルーム"）
+let currentRoomName = "チャットルーム";
 
-// ファイル送信
-const uploadFile = async (file) => {
-  try {
-    const storageRef = ref(storage, `uploads/${file.name}`);
-    await uploadBytes(storageRef, file);
-    alert(`ファイル「${file.name}」が送信されました！`);
-  } catch (error) {
-    console.error("ファイル送信エラー:", error);
+// チャットルーム名を変更
+const changeRoomName = () => {
+  const roomNameInput = document.getElementById("roomNameInput").value.trim();
+  const roomTitle = document.getElementById("roomTitle");
+  if (roomNameInput) {
+    currentRoomName = roomNameInput;
+    roomTitle.textContent = currentRoomName;
+    document.getElementById("roomNameInput").value = ""; // 入力フィールドをクリア
+    alert(`ルーム名が「${currentRoomName}」に変更されました！`);
+  } else {
+    alert("ルーム名を入力してください！");
   }
 };
 
 // メッセージ送信
-const sendMessage = async (message, name = "名無し", room = "default") => {
+const sendMessage = async (message, name = "名無し") => {
   if (!message.trim()) {
-    message = "テスト"; // 空メッセージの場合のデフォルト
+    message = "テスト"; // 空メッセージの場合のデフォルト値
   }
   if (!name.trim()) {
-    name = "名無し"; // 空の名前の場合のデフォルト
+    name = "名無し"; // 空の名前の場合のデフォルト値
   }
   try {
     await addDoc(messagesRef, {
       name: name,
       text: message,
-      room: room,
+      room: currentRoomName,
       timestamp: Date.now()
     });
     console.log("メッセージ送信成功");
@@ -94,14 +80,11 @@ const deleteMessages = async () => {
 
 // チャットのリアルタイム更新
 const chatBox = document.getElementById("chatBox");
-const roomSelect = document.getElementById("roomSelect");
-
 onSnapshot(messagesRef, (snapshot) => {
   chatBox.innerHTML = ""; // 表示領域をクリア
-  const selectedRoom = roomSelect.value;
   snapshot.forEach((doc) => {
     const messageData = doc.data();
-    if (messageData.room === selectedRoom) {
+    if (messageData.room === currentRoomName) {
       const messageElement = document.createElement("div");
       messageElement.textContent = `${messageData.name}: ${messageData.text}`;
       chatBox.appendChild(messageElement);
@@ -110,33 +93,17 @@ onSnapshot(messagesRef, (snapshot) => {
 });
 
 // イベントリスナー
-const createRoomButton = document.getElementById("createRoomButton");
+const changeRoomNameButton = document.getElementById("changeRoomNameButton");
 const sendButton = document.getElementById("sendButton");
 const deleteButton = document.getElementById("deleteButton");
-const uploadButton = document.getElementById("uploadButton");
-const fileInput = document.getElementById("fileInput");
 
-createRoomButton.addEventListener("click", () => {
-  const roomNameInput = document.getElementById("roomNameInput").value;
-  createRoom(roomNameInput);
-  document.getElementById("roomNameInput").value = ""; // 入力フィールドをクリア
-});
+changeRoomNameButton.addEventListener("click", changeRoomName);
 
 sendButton.addEventListener("click", () => {
   const messageValue = document.getElementById("messageInput").value;
   const nameValue = document.getElementById("nameInput").value;
-  const roomValue = roomSelect.value;
-  sendMessage(messageValue, nameValue, roomValue);
+  sendMessage(messageValue, nameValue);
   document.getElementById("messageInput").value = ""; // 入力をクリア
 });
 
 deleteButton.addEventListener("click", deleteMessages);
-
-uploadButton.addEventListener("click", () => {
-  const file = fileInput.files[0];
-  if (file) {
-    uploadFile(file);
-  } else {
-    alert("ファイルを選択してください！");
-  }
-});
