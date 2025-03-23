@@ -18,22 +18,30 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// コレクション参照
+// Firestoreのコレクション参照
 const messagesRef = collection(db, "messages");
+const roomsRef = collection(db, "rooms");
+const visitorsRef = collection(db, "visitors");
 
-// 見学者を表示 (仮実装)
+// 見学者の表示
 const visitorList = document.getElementById("visitorList");
-visitorList.textContent = "見学者: ユーザー123, ユーザー456";
+onSnapshot(visitorsRef, (snapshot) => {
+  let visitors = [];
+  snapshot.forEach((doc) => {
+    visitors.push(doc.data().name);
+  });
+  visitorList.textContent = `見学者: ${visitors.join(", ")}`;
+});
 
 // メッセージ送信
-const sendMessage = async (message) => {
+const sendMessage = async (message, room = "default") => {
   if (message.trim() !== "") {
-    await addDoc(messagesRef, { text: message, timestamp: Date.now() });
+    await addDoc(messagesRef, { text: message, room: room, timestamp: Date.now() });
   }
 };
 
 // メッセージ削除
-const deleteMessage = async () => {
+const deleteMessages = async () => {
   const snapshot = await onSnapshot(messagesRef, (snapshot) => {
     snapshot.forEach(async (docData) => {
       await deleteDoc(doc(db, "messages", docData.id));
@@ -43,9 +51,21 @@ const deleteMessage = async () => {
 
 // ファイル送信
 const uploadFile = async (file) => {
-  const storageRef = ref(storage, `uploads/${file.name}`);
-  await uploadBytes(storageRef, file);
-  alert("ファイルが送信されました！");
+  try {
+    const storageRef = ref(storage, `uploads/${file.name}`);
+    await uploadBytes(storageRef, file);
+    alert("ファイルが送信されました！");
+  } catch (error) {
+    console.error("ファイル送信エラー:", error);
+  }
+};
+
+// チャットルーム作成
+const createRoom = async (roomName) => {
+  if (roomName.trim() !== "") {
+    await addDoc(roomsRef, { name: roomName, createdAt: Date.now() });
+    alert(`チャットルーム「${roomName}」が作成されました！`);
+  }
 };
 
 // チャットメッセージをリアルタイムで表示
@@ -55,7 +75,7 @@ onSnapshot(messagesRef, (snapshot) => {
   snapshot.forEach((doc) => {
     const messageData = doc.data();
     const messageElement = document.createElement("div");
-    messageElement.textContent = messageData.text;
+    messageElement.textContent = `[${messageData.room || "default"}] ${messageData.text}`;
     chatBox.appendChild(messageElement);
   });
 });
@@ -65,6 +85,8 @@ const sendButton = document.getElementById("sendButton");
 const deleteButton = document.getElementById("deleteButton");
 const fileInput = document.getElementById("fileInput");
 const uploadButton = document.getElementById("uploadButton");
+const roomNameInput = document.getElementById("roomNameInput");
+const createRoomButton = document.getElementById("createRoomButton");
 
 sendButton.addEventListener("click", () => {
   const messageInput = document.getElementById("messageInput").value;
@@ -72,7 +94,7 @@ sendButton.addEventListener("click", () => {
   document.getElementById("messageInput").value = ""; // 入力フィールドをクリア
 });
 
-deleteButton.addEventListener("click", deleteMessage);
+deleteButton.addEventListener("click", deleteMessages);
 
 uploadButton.addEventListener("click", () => {
   const file = fileInput.files[0];
@@ -81,4 +103,10 @@ uploadButton.addEventListener("click", () => {
   } else {
     alert("ファイルを選択してください！");
   }
+});
+
+createRoomButton.addEventListener("click", () => {
+  const roomName = roomNameInput.value;
+  createRoom(roomName);
+  roomNameInput.value = ""; // 入力フィールドをクリア
 });
