@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>チャットルーム</title>
+  <title>リアルタイムチャット</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -23,22 +23,16 @@
   </style>
 </head>
 <body>
-  <h1>チャットルーム</h1>
-  <!-- チャットメッセージ表示領域 -->
+  <h1>リアルタイムチャット</h1>
   <div id="chatBox" class="chat-box"></div>
-  
-  <!-- 名前入力（空欄の場合は「名無し」になる） -->
   <div class="name-box">
     <input type="text" id="nameInput" placeholder="名前を入力">
   </div>
-  
-  <!-- メッセージ入力領域 -->
   <div class="input-box">
     <input type="text" id="messageInput" placeholder="メッセージを入力">
     <button id="sendButton">送信</button>
     <button id="deleteButton">削除</button>
   </div>
-  
   <script type="module" src="./chat.js"></script>
 </body>
 </html>
