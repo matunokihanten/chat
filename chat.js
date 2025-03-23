@@ -5,31 +5,30 @@ import {
   addDoc, 
   onSnapshot, 
   deleteDoc, 
-  doc,
+  doc, 
   getDocs 
 } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
 
-// Firebase の設定（※自身のプロジェクトの情報に置き換えてください）
+// Firebase設定
 const firebaseConfig = {
-  apiKey: "AIzaSyAk_I5nBbccP5CO6aUoKXu19urq_7B9jm0",
-  authDomain: "my-chat-room-75025.firebaseapp.com",
-  projectId: "my-chat-room-75025",
-  storageBucket: "my-chat-room-75025.appspot.com",
-  messagingSenderId: "778251776207",
-  appId: "1:778251776207:web:86b21d6af5bc40f1ba07ba",
-  measurementId: "G-1W7HQ8J1EL"
+  apiKey: "YOUR_FIREBASE_API_KEY", // Firebase APIキーを設定
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Firestore の "messages" コレクション
+// Firestoreのコレクション
 const messagesRef = collection(db, "messages");
 
-// 現在のチャットルーム名（初期値："チャットルーム"）
+// 現在のチャットルーム名
 let currentRoomName = "チャットルーム";
 
-// ★ チャットルーム名変更機能 ★
+// チャットルーム名変更
 const changeRoomName = () => {
   const roomNameInput = document.getElementById("roomNameInput").value.trim();
   if (roomNameInput) {
@@ -42,13 +41,13 @@ const changeRoomName = () => {
   }
 };
 
-// ★ メッセージ送信機能 ★
+// メッセージ送信
 const sendMessage = async (message, name = "名無し") => {
   if (!message.trim()) {
-    message = "テスト"; // メッセージ入力が空の場合は「テスト」にする
+    message = "テスト"; // 空メッセージ時のデフォルト値
   }
   if (!name.trim()) {
-    name = "名無し"; // 名前が空なら「名無し」
+    name = "名無し"; // 名前が空の場合のデフォルト値
   }
   try {
     await addDoc(messagesRef, {
@@ -63,7 +62,7 @@ const sendMessage = async (message, name = "名無し") => {
   }
 };
 
-// ★ メッセージ全削除機能 ★
+// メッセージ全削除
 const deleteMessages = async () => {
   try {
     const snapshot = await getDocs(messagesRef);
@@ -72,17 +71,16 @@ const deleteMessages = async () => {
     });
     console.log("全メッセージ削除成功");
   } catch (error) {
-    console.error("メッセージ削除エラー:", error);
+    console.error("削除エラー:", error);
   }
 };
 
-// ★ リアルタイム更新機能 ★
+// リアルタイムメッセージ更新
 const chatBox = document.getElementById("chatBox");
 onSnapshot(messagesRef, (snapshot) => {
-  chatBox.innerHTML = ""; // 表示エリアをクリア
+  chatBox.innerHTML = ""; // 表示をリセット
   snapshot.forEach((doc) => {
     const messageData = doc.data();
-    // 現在のチャットルーム名と一致するメッセージのみ表示
     if (messageData.room === currentRoomName) {
       const messageElement = document.createElement("div");
       messageElement.textContent = `${messageData.name}: ${messageData.text}`;
@@ -91,65 +89,57 @@ onSnapshot(messagesRef, (snapshot) => {
   });
 });
 
-// ★ チャットAIアシスタント機能 ★
-/*
-  ※ 以下は OpenAI の API を利用するサンプルコードです。
-  ※ 注意：このコードはクライアント側に API キーを含めるため、実際の運用時はサーバー側で処理するなどセキュリティ対策を講じてください。
-*/
+// AIアシスタントの応答
 async function getAIResponse(userMessage) {
-  const API_KEY = "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";  // ※ OpenAI の API キーを設定してください
+  const API_KEY = "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
+"; // OpenAI APIキーを設定
   try {
-    const response = await fetch("https://api.openai.com/v1/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${API_KEY}`
-  },
-  body: JSON.stringify({
-    model: "text-davinci-003",
-    prompt: "こんにちは！",
-    max_tokens: 100
-  })
-});
-const data = await response.json();
-console.log(data.choices[0].text.trim());
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "あなたは親切で知識豊富なアシスタントです。" },
+          { role: "user", content: userMessage }
+        ],
+        max_tokens: 150,
+        temperature: 0.7
+      })
+    });
 
-    const aiReply = data.choices && data.choices.length > 0
-      ? data.choices[0].text.trim()
-      : "すみません、返答を生成できませんでした。";
-    return aiReply;
+    if (!response.ok) {
+      throw new Error(`HTTPエラー: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content.trim();
   } catch (error) {
     console.error("AI応答エラー:", error);
-    return "エラーが発生しました。";
+    return "エラーが発生しました。もう一度お試しください。";
   }
 }
 
 const handleAIAssistant = async () => {
   const messageValue = document.getElementById("messageInput").value;
   if (!messageValue.trim()) {
-    alert("質問のメッセージが空です。");
+    alert("質問を入力してください！");
     return;
   }
-  // ユーザーのメッセージを使って AI の応答を取得
   const aiResponse = await getAIResponse(messageValue);
-  // 応答をチャットに投稿（送信者名を "AI" とする）
   await sendMessage(aiResponse, "AI");
 };
 
-// ★ イベントリスナーの設定 ★
-const changeRoomNameButton = document.getElementById("changeRoomNameButton");
-const sendButton = document.getElementById("sendButton");
-const deleteButton = document.getElementById("deleteButton");
-const aiAssistantButton = document.getElementById("aiAssistantButton");
-
-changeRoomNameButton.addEventListener("click", changeRoomName);
-
-sendButton.addEventListener("click", () => {
+// イベントリスナー
+document.getElementById("changeRoomNameButton").addEventListener("click", changeRoomName);
+document.getElementById("sendButton").addEventListener("click", () => {
   const messageValue = document.getElementById("messageInput").value;
   const nameValue = document.getElementById("nameInput").value;
   sendMessage(messageValue, nameValue);
-  document.getElementById("messageInput").value = ""; // 入力欄をクリア
+  document.getElementById("messageInput").value = "";
 });
-
-deleteButton.addEventListener("click", deleteMessages);
-aiAssistantButton.addEventListener("click", handleAIAssistant);
+document.getElementById("deleteButton").addEventListener("click", deleteMessages);
+document.getElementById("aiAssistantButton").addEventListener("click", handleAIAssistant);
