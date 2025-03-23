@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>多機能チャットルーム</title>
+  <title>バグ修正済みチャットルーム</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -16,7 +16,7 @@
       height: 400px;
       overflow-y: scroll;
     }
-    .input-box, .file-box, .room-box {
+    .input-box, .file-box, .name-box {
       margin-top: 10px;
     }
     .visitor-list {
@@ -27,9 +27,12 @@
   </style>
 </head>
 <body>
-  <h1>多機能チャットルーム</h1>
+  <h1>バグ修正済みチャットルーム</h1>
   <div id="visitorList" class="visitor-list">見学者: 読み込み中...</div>
   <div id="chatBox" class="chat-box"></div>
+  <div class="name-box">
+    <input type="text" id="nameInput" placeholder="名前を入力">
+  </div>
   <div class="input-box">
     <input type="text" id="messageInput" placeholder="メッセージを入力">
     <button id="sendButton">送信</button>
@@ -38,10 +41,6 @@
   <div class="file-box">
     <input type="file" id="fileInput">
     <button id="uploadButton">ファイル送信</button>
-  </div>
-  <div class="room-box">
-    <input type="text" id="roomNameInput" placeholder="新しいチャットルーム名">
-    <button id="createRoomButton">ルーム作成</button>
   </div>
   <script type="module" src="./chat.js"></script>
 </body>
