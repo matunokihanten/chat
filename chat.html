@@ -1,52 +1,88 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>AIアシスタント付きチャットルーム</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  onSnapshot, 
+  deleteDoc, 
+  doc, 
+  getDocs 
+} from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const messagesRef = collection(db, "messages");
+let currentRoomName = "チャットルーム";
+
+// メッセージ送信
+const sendMessage = async (message, name = "名無し") => {
+  if (!message.trim()) {
+    message = "テスト";
+  }
+  if (!name.trim()) {
+    name = "名無し";
+  }
+  try {
+    await addDoc(messagesRef, { name: name, text: message, room: currentRoomName, timestamp: Date.now() });
+    console.log("メッセージ送信成功");
+  } catch (error) {
+    console.error("送信エラー:", error);
+  }
+};
+
+// リアルタイム表示
+const chatBox = document.getElementById("chatBox");
+onSnapshot(messagesRef, (snapshot) => {
+  chatBox.innerHTML = "";
+  snapshot.forEach((doc) => {
+    const messageData = doc.data();
+    if (messageData.room === currentRoomName) {
+      const messageElement = document.createElement("div");
+      messageElement.textContent = `${messageData.name}: ${messageData.text}`;
+      chatBox.appendChild(messageElement);
     }
-    .chat-box {
-      border: 1px solid #ccc;
-      padding: 10px;
-      width: 300px;
-      height: 400px;
-      overflow-y: scroll;
-      margin-bottom: 10px;
-    }
-    .input-box, .room-box, .ai-box {
-      margin-top: 10px;
-    }
-  </style>
-</head>
-<body>
-  <h1 id="roomTitle">チャットルーム</h1>
-  
-  <!-- チャットルーム名変更 -->
-  <div class="room-box">
-    <input type="text" id="roomNameInput" placeholder="チャットルーム名を入力">
-    <button id="changeRoomNameButton">ルーム名変更</button>
-  </div>
-  
-  <!-- チャット表示 -->
-  <div id="chatBox" class="chat-box"></div>
-  
-  <!-- チャット入力エリア -->
-  <div class="input-box">
-    <input type="text" id="nameInput" placeholder="名前を入力">
-    <input type="text" id="messageInput" placeholder="メッセージを入力">
-    <button id="sendButton">送信</button>
-    <button id="deleteButton">全削除</button>
-  </div>
-  
-  <!-- AIアシスタント操作 -->
-  <div class="ai-box">
-    <button id="aiAssistantButton">AIアシスタントに質問</button>
-  </div>
-  
-  <script type="module" src="./chat.js"></script>
-</body>
-</html>
+  });
+});
+
+// 全削除
+const deleteMessages = async () => {
+  try {
+    const snapshot = await getDocs(messagesRef);
+    snapshot.forEach(async (docSnap) => {
+      await deleteDoc(doc(db, "messages", docSnap.id));
+    });
+    console.log("全メッセージ削除成功");
+  } catch (error) {
+    console.error("削除エラー:", error);
+  }
+};
+
+// イベントリスナー設定
+document.getElementById("sendButton").addEventListener("click", () => {
+  const message = document.getElementById("messageInput").value;
+  const name = document.getElementById("nameInput").value;
+  sendMessage(message, name);
+  document.getElementById("messageInput").value = "";
+});
+
+document.getElementById("deleteButton").addEventListener("click", deleteMessages);
+
+document.getElementById("changeRoomNameButton").addEventListener("click", () => {
+  const roomNameInput = document.getElementById("roomNameInput").value.trim();
+  if (roomNameInput) {
+    currentRoomName = roomNameInput;
+    document.getElementById("roomTitle").textContent = currentRoomName;
+    document.getElementById("roomNameInput").value = "";
+  } else {
+    alert("ルーム名を入力してください！");
+  }
+});
