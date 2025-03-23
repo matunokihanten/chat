@@ -2,8 +2,8 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <title>すべての機能付きチャットルーム</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>名前変更可能なチャットルーム</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -17,25 +17,35 @@
       overflow-y: scroll;
       margin-bottom: 10px;
     }
-    .input-box, .room-box {
+    .input-box, .room-box, .ai-box {
       margin-top: 10px;
     }
   </style>
 </head>
 <body>
+  <!-- チャットルームのタイトル -->
   <h1 id="roomTitle">チャットルーム</h1>
+  
+  <!-- ルーム名変更エリア -->
   <div class="room-box">
     <input type="text" id="roomNameInput" placeholder="チャットルーム名を入力">
-    <button id="changeRoomNameButton">ルーム名を変更</button>
+    <button id="changeRoomNameButton">ルーム名変更</button>
   </div>
   
+  <!-- チャットの表示エリア -->
   <div id="chatBox" class="chat-box"></div>
   
+  <!-- メッセージ送信エリア -->
   <div class="input-box">
     <input type="text" id="nameInput" placeholder="名前を入力">
     <input type="text" id="messageInput" placeholder="メッセージを入力">
     <button id="sendButton">送信</button>
-    <button id="deleteButton">削除</button>
+    <button id="deleteButton">全削除</button>
+  </div>
+  
+  <!-- AIアシスタント操作エリア -->
+  <div class="ai-box">
+    <button id="aiAssistantButton">AIアシスタント</button>
   </div>
   
   <script type="module" src="./chat.js"></script>
