@@ -102,17 +102,18 @@ async function getAIResponse(userMessage) {
     const response = await fetch("https://api.openai.com/v1/completions", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "text-davinci-003",
-        prompt: `ユーザーのメッセージ: ${userMessage}\nAIの返答:`,
-        max_tokens: 150,
-        temperature: 0.7
-      })
-    });
-    const data = await response.json();
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${API_KEY}`
+  },
+  body: JSON.stringify({
+    model: "text-davinci-003",
+    prompt: "こんにちは！",
+    max_tokens: 100
+  })
+});
+const data = await response.json();
+console.log(data.choices[0].text.trim());
+
     const aiReply = data.choices && data.choices.length > 0
       ? data.choices[0].text.trim()
       : "すみません、返答を生成できませんでした。";
